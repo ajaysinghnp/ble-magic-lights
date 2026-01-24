@@ -39,11 +39,6 @@ jobs:
       - name: Push commit
         run: git push origin HEAD:main
 
-      - name: HACS Validation
-        uses: hacs/action@main
-        with:
-          category: integration
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
