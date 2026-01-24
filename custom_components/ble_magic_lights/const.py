@@ -1,0 +1,7 @@
+DOMAIN = "ble_magic_lights"
+
+CONF_NAME = "name"
+CONF_ADDRESS = "address"
+
+CMD_UUID = "0000fff3-0000-1000-8000-00805f9b34fb"
+NOTIFY_UUID = "0000fff4-0000-1000-8000-00805f9b34fb"

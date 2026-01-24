@@ -1,0 +1,11 @@
+{
+  "title": "BLE Magic Lights",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add BLE Magic Light",
+        "description": "Enter the Bluetooth address of your Magic Light."
+      }
+    }
+  }
+}

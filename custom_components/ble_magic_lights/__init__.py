@@ -1,23 +1,11 @@
-from homeassistant.helpers.discovery import async_load_platform
-import logging
-
-DOMAIN = "ble_magic_lights"
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
 
 
-async def async_setup(hass, config):
-    """Set up the BLE Magic Lights integration."""
-    lights = config.get(DOMAIN, [])
-    for lamp_conf in lights:
-        name = lamp_conf.get("name")
-        address = lamp_conf.get("address")
-        hass.async_create_task(
-            async_load_platform(
-                hass,
-                "light",
-                DOMAIN,
-                {"name": name, "address": address},
-                config,
-            )
-        )
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    await hass.config_entries.async_forward_entry_setup(entry, "light")
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    return await hass.config_entries.async_forward_entry_unload(entry, "light")

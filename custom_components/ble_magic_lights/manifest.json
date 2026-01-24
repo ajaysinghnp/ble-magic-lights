@@ -6,8 +6,11 @@
   "requirements": [
     "bleak"
   ],
-  "dependencies": [],
+  "dependencies": [
+    "bluetooth"
+  ],
   "codeowners": [
     "@ajaysinghnp"
-  ]
+  ],
+  "config_flow": true
 }
