@@ -1,10 +1,6 @@
 {
   "name": "BLE Magic Lights",
   "content_in_root": false,
-  "domains": [
-    "light"
-  ],
-  "homeassistant": "2024.6.0",
-  "iot_class": "local_polling",
+  "domain": "ble_magic_lights",
   "render_readme": true
 }

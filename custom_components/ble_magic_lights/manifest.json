@@ -3,6 +3,7 @@
   "name": "BLE Magic Lights",
   "version": "0.0.1",
   "documentation": "https://ajaysinghnp.github.io/ble-magic-lights",
+  "issue_tracker": "https://github.com/ajaysinghnp/ble-magic-lights/issues",
   "requirements": [
     "bleak"
   ],
