@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update manifest.json version
+        run: |
+          MANIFEST="custom_components/ble_magic_lights/manifest.json"
+          jq --arg v "${{ steps.version.outputs.version }}" \
+             '.version = $v' \
+             $MANIFEST > tmp.json && mv tmp.json $MANIFEST
+
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add custom_components/ble_magic_lights/manifest.json
+          git commit -m "Release v${{ steps.version.outputs.version }}" || echo "No changes"
+
+      - name: Push commit
+        run: git push origin HEAD:main
+
+      - name: HACS Validation
+        uses: hacs/action@main
+        with:
+          category: integration
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: BLE Magic Lights v${{ steps.version.outputs.version }}
+          generate_release_notes: true
