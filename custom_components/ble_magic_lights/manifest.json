@@ -5,7 +5,8 @@
   "documentation": "https://ajaysinghnp.github.io/ble-magic-lights",
   "issue_tracker": "https://github.com/ajaysinghnp/ble-magic-lights/issues",
   "requirements": [
-    "bleak"
+    "bleak",
+    "bleak_retry_connector"
   ],
   "dependencies": [
     "bluetooth"
