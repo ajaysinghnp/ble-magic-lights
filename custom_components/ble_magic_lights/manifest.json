@@ -1,7 +1,7 @@
 {
   "domain": "ble_magic_lights",
   "name": "BLE Magic Lights",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "documentation": "https://ajaysinghnp.github.io/ble-magic-lights",
   "issue_tracker": "https://github.com/ajaysinghnp/ble-magic-lights/issues",
   "requirements": [
