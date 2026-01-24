@@ -1,0 +1,13 @@
+{
+  "domain": "ble_magic_lights",
+  "name": "BLE Magic Lights",
+  "version": "1.0.0",
+  "documentation": "https://ajaysinghnp.github.io/ble-magic-lights",
+  "requirements": [
+    "bleak"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@ajaysinghnp"
+  ]
+}
