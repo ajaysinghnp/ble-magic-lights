@@ -1,81 +1,56 @@
-"""BLE Magic Lights Light platform."""
+"""BLE Magic Lights - Light platform for Home Assistant."""
 
 from homeassistant.components.light import (
     LightEntity,
+    SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_EFFECT,
+    COLOR_MODE_ONOFF,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_HS,
 )
-from homeassistant.const import COLOR_MODE_BRIGHTNESS, COLOR_MODE_HS
 from .ble_device import BleMagicLightDevice
 
-# -------------------------------
-# Effects mapping
-# -------------------------------
-EFFECTS = {
-    "Seven Color Gradient": "seven_color_gradient",
-    "Seven Color Gradient High": "seven_color_gradient_high_speed",
-    "Seven Color Gradient Low": "seven_color_gradient_low",
-    "Rapid Blinking": "rapid_blinking_low",
-    "Three Color Gradient": "three_color_gradient",
-    "Green Gradient": "green_gradient",
-    "Blue Strobe": "blue_strobe",
-    "White Flow High": "white_flow_high_speed",
-    "Blue Flow High": "blue_flow_high_speed",
-    "Purple on Blue High": "purple_on_blue_high_speed",
-    "Yellow on Blue High": "yellow_on_blue_high_speed",
-    "Green on Blue High": "green_on_blue_high_speed",
-    "Red on Blue High": "red_on_blue_high_speed",
-    "White on Green High": "white_on_green_high_speed",
-    "Multi on Red": "multi_on_red",
-    "Static Light Red": "static_red",
-    "Static Light Green": "static_green",
-    "Static Light Blue": "static_blue",
-    "Static White Low": "static_white_low",
-    "Static White High": "static_white_high",
-    "Static Light Yellow": "static_light_yellow",
-    "Static Yellow Green": "static_yellow_green",
-    "Static Light Green": "static_light_green",
-    "Static Light White": "static_light_white",
-    "Static White Green": "static_white_green",
-    "Static Light Sky Blue": "static_light_sky_blue_high",
-    "Static Light Green Low": "static_light_green_low",
-    "Static Purple Low": "static_purple_low",
-    "Static Warm Medium": "static_warm_medium",
-}
+PLATFORMS = ["light"]
 
 
-# -------------------------------
-# Setup Entry
-# -------------------------------
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up BLE Magic Light from config entry."""
+    """Set up BLE Magic Light from a config entry."""
     device = BleMagicLightDevice(entry.data["address"])
-    async_add_entities([BleMagicLight(entry.title, device)])
+    async_add_entities([BLEMagicLight(entry.title, device)])
 
 
-# -------------------------------
-# Light Entity
-# -------------------------------
-class BleMagicLight(LightEntity):
+class BLEMagicLight(LightEntity):
     """Representation of a BLE Magic Light."""
 
-    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS, COLOR_MODE_HS}
-    _attr_color_mode = COLOR_MODE_BRIGHTNESS
-    _attr_supported_features = SUPPORT_COLOR | SUPPORT_EFFECT
+    _attr_supported_color_modes = {
+        COLOR_MODE_ONOFF,
+        COLOR_MODE_BRIGHTNESS,
+        COLOR_MODE_HS,
+    }
+    _attr_color_mode = COLOR_MODE_ONOFF
+    _attr_supported_features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_EFFECT
 
     def __init__(self, name, device: BleMagicLightDevice):
         self._attr_name = name
         self._device = device
         self._is_on = False
+        self._brightness = 255
         self._hs_color = (0, 0)
         self._effect = None
+        self._available_effects = list(device.commands.keys())  # all decoded commands
 
-    # -------------------------------
-    # Properties
-    # -------------------------------
     @property
     def is_on(self):
         return self._is_on
+
+    @property
+    def brightness(self):
+        return self._brightness
+
+    @property
+    def hs_color(self):
+        return self._hs_color
 
     @property
     def effect(self):
@@ -83,54 +58,50 @@ class BleMagicLight(LightEntity):
 
     @property
     def effect_list(self):
-        return list(EFFECTS.keys())
+        return self._available_effects
 
-    @property
-    def hs_color(self):
-        return self._hs_color
-
-    # -------------------------------
-    # Async Commands
-    # -------------------------------
     async def async_turn_on(self, **kwargs):
-        # Handle effect first
+        """Turn on the light with optional parameters."""
+        # Handle brightness / color / effect
         effect = kwargs.get("effect")
+        brightness = kwargs.get("brightness")
         hs_color = kwargs.get("hs_color")
 
         if effect:
-            cmd_key = EFFECTS.get(effect)
-            if cmd_key:
-                await self._device.send(cmd_key)
+            payload = self._device.commands.get(effect)
+            if payload:
+                await self._device.send(effect)
                 self._effect = effect
-                self._is_on = True
-                self.async_write_ha_state()
-                return
-
-        # Handle color
-        if hs_color:
-            # Map to closest static color (you can improve with a proper color lookup)
+        elif hs_color:
             self._hs_color = hs_color
-            # Example: pick static_white_high if brightness > 50
-            if hs_color[1] > 50:
-                await self._device.send("static_white_high")
+            # Map HS to closest static color payload
+            # Example: only use static_red / static_green / static_blue as demo
+            h, s = hs_color
+            if h < 60:
+                await self._device.send("static_red")
+            elif h < 180:
+                await self._device.send("static_green")
             else:
-                await self._device.send("static_white_low")
+                await self._device.send("static_blue")
             self._effect = None
-            self._is_on = True
-            self.async_write_ha_state()
-            return
+        else:
+            # Default turn on
+            await self._device.send("turn_on")
+            self._effect = None
 
-        # Default turn on
-        await self._device.send("turn_on")
+        if brightness:
+            self._brightness = brightness  # Optional: can scale payloads if desired
+
         self._is_on = True
-        self._effect = None
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
+        """Turn off the light."""
         await self._device.send("turn_off")
         self._is_on = False
         self._effect = None
         self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self):
+        """Disconnect BLE when entity is removed."""
         await self._device.disconnect()
