@@ -1,6 +1,5 @@
 {
   "name": "BLE Magic Lights",
   "content_in_root": false,
-  "domain": "ble_magic_lights",
   "render_readme": true
 }
