@@ -1,5 +1,9 @@
 {
   "name": "BLE Magic Lights",
   "content_in_root": false,
-  "render_readme": true
+  "render_readme": true,
+  "filename": "ble_magic_lights.zip",
+  "zip_release": true,
+  "homeassistant": "2025.2.4",
+  "hacs": "2.0.1"
 }
