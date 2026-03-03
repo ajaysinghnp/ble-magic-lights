@@ -15,6 +15,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not entry.title:
         entry.title = "BLE Magic Lights"
 
+    # TODO Scan for the devices and select on to setup, for now just use the address from config entry
+
     # Store device instance in hass.data
     hass.data.setdefault("ble_magic_lights", {})
     hass.data["ble_magic_lights"][entry.entry_id] = BleMagicLightDevice(
@@ -29,8 +31,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload BLE Magic Lights config entry."""
 
-    # Remove device instance
-    hass.data.get("ble_magic_lights", {}).pop(entry.entry_id, None)
-
     # Unload platform
-    return await hass.config_entries.async_forward_entry_unload(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    # Remove device instance
+    if unload_ok:
+        hass.data.get("ble_magic_lights", {}).pop(entry.entry_id, None)
+
+    return unload_ok

@@ -1,4 +1,6 @@
-# commands.py
+# -------------------------------
+# All known BLE Magic Light commands
+# -------------------------------
 
 COMMANDS = {
     # Power

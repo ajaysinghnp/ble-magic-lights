@@ -1,5 +1,7 @@
 DOMAIN = "ble_magic_lights"
 
+DEFAULT_ADDRESS = "F08083C3-45C3-AB3D-E351-CD1AD4FBDF33"
+
 CONF_NAME = "name"
 CONF_ADDRESS = "address"
 
