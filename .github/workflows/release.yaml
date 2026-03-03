@@ -17,7 +17,7 @@ jobs:
             changelog="No changelog entries found."
           fi
           changelog+=$'\n\n[Read the full changelog](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)'
-          echo "$changelog" > release_notes.md
+          echo "$changelog" > CHANGELOG.md
 
             - name: Ensure Bluetooth in manifest dependencies
               run: |
@@ -28,7 +28,6 @@ jobs:
                 else
                     echo "Bluetooth dependency already present"
                 fi
-
 
       - name: Zip custom component directory
         run: |
