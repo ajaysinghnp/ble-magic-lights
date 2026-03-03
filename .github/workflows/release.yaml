@@ -19,15 +19,15 @@ jobs:
           changelog+=$'\n\n[Read the full changelog](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)'
           echo "$changelog" > CHANGELOG.md
 
-            - name: Ensure Bluetooth in manifest dependencies
-              run: |
-                MANIFEST_FILE="custom_components/ble_magic_lights/manifest.json"
-                if ! jq -e '.dependencies[] | select(.=="bluetooth")' "$MANIFEST_FILE" >/dev/null; then
-                    echo "Adding bluetooth to dependencies..."
-                    jq '.dependencies += ["bluetooth"]' "$MANIFEST_FILE" > "$MANIFEST_FILE.tmp" && mv "$MANIFEST_FILE.tmp" "$MANIFEST_FILE"
-                else
-                    echo "Bluetooth dependency already present"
-                fi
+      - name: Ensure Bluetooth in manifest dependencies
+        run: |
+          MANIFEST_FILE="custom_components/ble_magic_lights/manifest.json"
+          if ! jq -e '.dependencies[] | select(.=="bluetooth")' "$MANIFEST_FILE" >/dev/null; then
+              echo "Adding bluetooth to dependencies..."
+              jq '.dependencies += ["bluetooth"]' "$MANIFEST_FILE" > "$MANIFEST_FILE.tmp" && mv "$MANIFEST_FILE.tmp" "$MANIFEST_FILE"
+          else
+              echo "Bluetooth dependency already present"
+          fi
 
       - name: Zip custom component directory
         run: |
