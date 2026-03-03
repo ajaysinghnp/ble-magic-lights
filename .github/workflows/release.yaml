@@ -43,7 +43,7 @@ jobs:
           script: |
             const fs = require('fs');
             const { readFile } = require('fs/promises');
-            const changelog = fs.readFileSync('release_notes.md', 'utf8');
+            const changelog = fs.readFileSync('CHANGELOG.md', 'utf8');
             const tag = context.ref.replace('refs/tags/', '');
 
             const createReleaseResponse = await github.rest.repos.createRelease({
