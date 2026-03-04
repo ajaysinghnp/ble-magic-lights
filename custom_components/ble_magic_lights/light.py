@@ -2,12 +2,8 @@
 
 from homeassistant.components.light import (
     LightEntity,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_EFFECT,
-    COLOR_MODE_ONOFF,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_HS,
+    ColorMode,
+    LightEntityFeature,
 )
 from .ble_device import BleMagicLightDevice
 
@@ -17,28 +13,31 @@ PLATFORMS = ["light"]
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up BLE Magic Light from a config entry."""
     device = BleMagicLightDevice(entry.data["address"])
-    async_add_entities([BLEMagicLight(entry.title, device)])
+    async_add_entities([BLEMagicLight(entry.title, device)], update_before_add=False)
 
 
 class BLEMagicLight(LightEntity):
     """Representation of a BLE Magic Light."""
 
     _attr_supported_color_modes = {
-        COLOR_MODE_ONOFF,
-        COLOR_MODE_BRIGHTNESS,
-        COLOR_MODE_HS,
+        ColorMode.ONOFF,
+        ColorMode.BRIGHTNESS,
+        ColorMode.HS,
     }
-    _attr_color_mode = COLOR_MODE_ONOFF
-    _attr_supported_features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_EFFECT
+
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_features = LightEntityFeature.EFFECT
 
     def __init__(self, name, device: BleMagicLightDevice):
         self._attr_name = name
+        self._attr_unique_id = device.address
         self._device = device
         self._is_on = False
         self._brightness = 255
         self._hs_color = (0, 0)
         self._effect = None
-        self._available_effects = list(device.commands.keys())  # all decoded commands
+        # Expose available commands/effects from the device commands dict
+        self._available_effects = list(device.commands.keys())
 
     @property
     def is_on(self):
@@ -60,22 +59,32 @@ class BLEMagicLight(LightEntity):
     def effect_list(self):
         return self._available_effects
 
+    async def _ensure_connected(self):
+        """Ensure BLE client is connected before sending commands."""
+        if self._device.client is None or not getattr(
+            self._device.client, "is_connected", False
+        ):
+            await self._device.connect()
+
     async def async_turn_on(self, **kwargs):
-        """Turn on the light with optional parameters."""
-        # Handle brightness / color / effect
+        """Turn on the light with optional parameters.
+
+        Supports `effect`, `brightness`, and `hs_color` (mapped to static colors).
+        """
         effect = kwargs.get("effect")
         brightness = kwargs.get("brightness")
         hs_color = kwargs.get("hs_color")
 
+        await self._ensure_connected()
+
         if effect:
-            payload = self._device.commands.get(effect)
-            if payload:
+            if effect in self._device.commands:
                 await self._device.send(effect)
                 self._effect = effect
+            else:
+                raise ValueError(f"Unknown effect: {effect}")
         elif hs_color:
             self._hs_color = hs_color
-            # Map HS to closest static color payload
-            # Example: only use static_red / static_green / static_blue as demo
             h, s = hs_color
             if h < 60:
                 await self._device.send("static_red")
@@ -85,18 +94,18 @@ class BLEMagicLight(LightEntity):
                 await self._device.send("static_blue")
             self._effect = None
         else:
-            # Default turn on
             await self._device.send("turn_on")
             self._effect = None
 
-        if brightness:
-            self._brightness = brightness  # Optional: can scale payloads if desired
+        if brightness is not None:
+            self._brightness = brightness
 
         self._is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn off the light."""
+        await self._ensure_connected()
         await self._device.send("turn_off")
         self._is_on = False
         self._effect = None
