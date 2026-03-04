@@ -5,30 +5,24 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntityFeature,
 )
-from .ble_device import BleMagicLightDevice
 
 PLATFORMS = ["light"]
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up BLE Magic Light from a config entry."""
-    device = BleMagicLightDevice(entry.data["address"])
+    device = hass.data["ble_magic_lights"][entry.entry_id]
     async_add_entities([BLEMagicLight(entry.title, device)], update_before_add=False)
 
 
 class BLEMagicLight(LightEntity):
     """Representation of a BLE Magic Light."""
 
-    _attr_supported_color_modes = {
-        ColorMode.ONOFF,
-        ColorMode.BRIGHTNESS,
-        ColorMode.HS,
-    }
-
-    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.HS}
+    _attr_color_mode = ColorMode.HS
     _attr_supported_features = LightEntityFeature.EFFECT
 
-    def __init__(self, name, device: BleMagicLightDevice):
+    def __init__(self, name, device):
         self._attr_name = name
         self._attr_unique_id = device.address
         self._device = device
@@ -36,8 +30,10 @@ class BLEMagicLight(LightEntity):
         self._brightness = 255
         self._hs_color = (0, 0)
         self._effect = None
-        # Expose available commands/effects from the device commands dict
-        self._available_effects = list(device.commands.keys())
+        # Expose only effect commands (exclude power control keys)
+        self._available_effects = [
+            k for k in device.commands if not k.startswith("turn_")
+        ]
 
     @property
     def is_on(self):

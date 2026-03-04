@@ -8,7 +8,9 @@
     "bleak",
     "bleak_retry_connector"
   ],
-  "dependencies": [],
+  "dependencies": [
+    "bluetooth"
+  ],
   "codeowners": [
     "@ajaysinghnp"
   ],

@@ -20,7 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # Store device instance in hass.data
     hass.data.setdefault("ble_magic_lights", {})
     hass.data["ble_magic_lights"][entry.entry_id] = BleMagicLightDevice(
-        entry.data["address"]
+        hass, entry.data["address"]
     )
 
     # Forward setup to light platform
